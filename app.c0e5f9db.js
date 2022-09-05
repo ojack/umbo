@@ -59098,8 +59098,11 @@ var hydraURL = function hydraURL(code) {
   return "".concat(window.location.origin).concat(window.location.pathname.replace('/index.html', ''), "/lofi-renderer.html?code=").concat(encodeBase64(code));
 };
 
-var _require2 = require('./config.js'),
-    entrypoint = _require2.entrypoint;
+var config = require('./config.js');
+
+var _config$process$env$N = config["development"],
+    entrypoint = _config$process$env$N.entrypoint,
+    entrypointBase = _config$process$env$N.entrypointBase;
 
 var generate = require('./code-generator-oj.js');
 
@@ -59150,7 +59153,8 @@ module.exports = function (state, emitter) {
   // setInterval(() => emitter.emit('render'), 3000)
 
   function getViewFromRoute() {
-    var route = state.route.replace(entrypoint, "");
+    var route1 = state.route.replace(entrypoint, "");
+    var route = route1.replace(entrypointBase, "");
     route = route.replace(/\\|\//g, '');
     route = route.replace('*', '');
     var separate = route.split(':');
@@ -60296,7 +60300,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62365" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50328" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
