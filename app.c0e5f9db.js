@@ -57826,9 +57826,15 @@ module.exports = {
 };
 },{"graphql-request":"node_modules/graphql-request/dist/index.js"}],"app/config.js":[function(require,module,exports) {
 module.exports = {
-  // entrypoint: 'index.html'
-  entrypointBase: '/umbo',
-  entrypoint: '/umbo/index.html' // entrypoint: ''
+  development: {
+    entrypoint: 'index.html',
+    entrypointBase: ''
+  },
+  production: {
+    // entrypoint: 'index.html'
+    entrypointBase: '/umbo',
+    entrypoint: '/umbo/index.html'
+  } // entrypoint: ''
 
 };
 },{}],"node_modules/seedrandom/lib/alea.js":[function(require,module,exports) {
@@ -60188,16 +60194,21 @@ var _require = require('./views/slogans.js'),
     background = _require.background; //const { entrypoint, entrypointBase } = require('./config.js')
 
 
+var config = require('./config.js');
+
 var info = require('./views/info.js');
 
 var navContainer = require('./views/bottom-nav.js');
 
 var footer = require('./views/footer.js');
 
-var baseRoute = '/index.html';
-console.log('LOADED ENV', "index.html");
-var entrypoint = "index.html";
-var entrypointBase = undefined; //   ${state.selected === null ? collection(state, emit) : viewer(state.selected, emit)}
+var baseRoute = '/index.html'; // const entrypoint = process.env.BASE_URL
+// const entrypointBase = process.env.SECONDARY_PATH
+
+var _config$process$env$N = config["development"],
+    entrypoint = _config$process$env$N.entrypoint,
+    entrypointBase = _config$process$env$N.entrypointBase;
+console.log('LOADED ENV', undefined, "development", entrypoint, entrypointBase); //   ${state.selected === null ? collection(state, emit) : viewer(state.selected, emit)}
 
 var mainView = function mainView(type) {
   return function (state, emit) {
@@ -60256,7 +60267,7 @@ function individualView(state, emit) {
   var content = html(_templateObject8 || (_templateObject8 = _taggedTemplateLiteral(["", " ", ""])), viewer(state.views.viewer, emit), navContainer(nav));
   return wrapper(content, state, emit);
 }
-},{"choo/html":"node_modules/choo/html/index.js","choo-devtools":"node_modules/choo-devtools/index.js","choo":"node_modules/choo/index.js","./store.js":"app/store.js","./views/collection.js":"app/views/collection.js","./views/viewer.js":"app/views/viewer.js","./views/slogans.js":"app/views/slogans.js","./views/info.js":"app/views/info.js","./views/bottom-nav.js":"app/views/bottom-nav.js","./views/footer.js":"app/views/footer.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"choo/html":"node_modules/choo/html/index.js","choo-devtools":"node_modules/choo-devtools/index.js","choo":"node_modules/choo/index.js","./store.js":"app/store.js","./views/collection.js":"app/views/collection.js","./views/viewer.js":"app/views/viewer.js","./views/slogans.js":"app/views/slogans.js","./config.js":"app/config.js","./views/info.js":"app/views/info.js","./views/bottom-nav.js":"app/views/bottom-nav.js","./views/footer.js":"app/views/footer.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -60284,7 +60295,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59051" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61271" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
