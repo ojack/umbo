@@ -57826,7 +57826,9 @@ module.exports = {
 };
 },{"graphql-request":"node_modules/graphql-request/dist/index.js"}],"app/config.js":[function(require,module,exports) {
 module.exports = {
-  entrypoint: 'index.html' // entrypoint: ''
+  // entrypoint: 'index.html'
+  entrypointBase: '/umbo',
+  entrypoint: '/umbo/index.html' // entrypoint: ''
 
 };
 },{}],"node_modules/seedrandom/lib/alea.js":[function(require,module,exports) {
@@ -59087,7 +59089,7 @@ var encodeBase64 = function encodeBase64(text) {
 
 
 var hydraURL = function hydraURL(code) {
-  return "".concat(window.location.origin, "/lofi-renderer.html?code=").concat(encodeBase64(code));
+  return "".concat(window.location.origin).concat(window.location.pathname.replace('/index.html', ''), "/lofi-renderer.html?code=").concat(encodeBase64(code));
 };
 
 var _require2 = require('./config.js'),
@@ -60183,10 +60185,8 @@ var collection = require('./views/collection.js');
 var viewer = require('./views/viewer.js');
 
 var _require = require('./views/slogans.js'),
-    background = _require.background;
+    background = _require.background; //const { entrypoint, entrypointBase } = require('./config.js')
 
-var _require2 = require('./config.js'),
-    entrypoint = _require2.entrypoint;
 
 var info = require('./views/info.js');
 
@@ -60194,7 +60194,10 @@ var navContainer = require('./views/bottom-nav.js');
 
 var footer = require('./views/footer.js');
 
-var baseRoute = '/index.html'; //   ${state.selected === null ? collection(state, emit) : viewer(state.selected, emit)}
+var baseRoute = '/index.html';
+console.log('LOADED ENV', "index.html");
+var entrypoint = "index.html";
+var entrypointBase = undefined; //   ${state.selected === null ? collection(state, emit) : viewer(state.selected, emit)}
 
 var mainView = function mainView(type) {
   return function (state, emit) {
@@ -60220,6 +60223,12 @@ app.route("".concat(entrypoint, "/collection/:user"), mainView('collection')); /
 app.route("".concat(entrypoint, "/viewer/:id"), individualView);
 app.route("".concat(entrypoint), mainView('gallery'));
 app.route("".concat(entrypoint, "/*"), mainView('gallery'));
+app.route("".concat(entrypointBase, "/create"), landingView);
+app.route("".concat(entrypointBase, "/collection/:user"), mainView('collection')); //app.route(`${entrypointBase}/collection`, mainView) // gallery view but for a specific user
+
+app.route("".concat(entrypointBase, "/viewer/:id"), individualView);
+app.route("".concat(entrypointBase), mainView('gallery'));
+app.route("".concat(entrypointBase, "/*"), mainView('gallery'));
 app.mount('body');
 
 var wrapper = function wrapper(content, state, emit) {
@@ -60247,7 +60256,7 @@ function individualView(state, emit) {
   var content = html(_templateObject8 || (_templateObject8 = _taggedTemplateLiteral(["", " ", ""])), viewer(state.views.viewer, emit), navContainer(nav));
   return wrapper(content, state, emit);
 }
-},{"choo/html":"node_modules/choo/html/index.js","choo-devtools":"node_modules/choo-devtools/index.js","choo":"node_modules/choo/index.js","./store.js":"app/store.js","./views/collection.js":"app/views/collection.js","./views/viewer.js":"app/views/viewer.js","./views/slogans.js":"app/views/slogans.js","./config.js":"app/config.js","./views/info.js":"app/views/info.js","./views/bottom-nav.js":"app/views/bottom-nav.js","./views/footer.js":"app/views/footer.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"choo/html":"node_modules/choo/html/index.js","choo-devtools":"node_modules/choo-devtools/index.js","choo":"node_modules/choo/index.js","./store.js":"app/store.js","./views/collection.js":"app/views/collection.js","./views/viewer.js":"app/views/viewer.js","./views/slogans.js":"app/views/slogans.js","./views/info.js":"app/views/info.js","./views/bottom-nav.js":"app/views/bottom-nav.js","./views/footer.js":"app/views/footer.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -60275,7 +60284,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "64476" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "59051" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
