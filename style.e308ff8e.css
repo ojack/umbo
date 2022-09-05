@@ -29,6 +29,15 @@ background: -webkit-linear-gradient(top, #f5f6f6 0%,#dbdce2 21%,#b8bac6 49%,#ddd
 background: linear-gradient(to bottom, #f5f6f6 0%,#dbdce2 21%,#b8bac6 49%,#dddfe3 80%,#f5f6f6 100%);
 } */
 
+/* prism style overrides */
+.token.class-name, .token.function {
+  color: black;
+}
+
+.token.operator {
+  background: none;
+}
+
 .gradient{
 background: #f7fbfc; /* Old browsers
 background: -moz-linear-gradient(-45deg, #f7fbfc 0%, #eaead3 40%, #f4bac3 100%); /* FF3.6-15 */
