@@ -59109,6 +59109,8 @@ var generate = require('./code-generator-oj.js');
 var MAX_QUERY = 48; // max number to query from database at a time, make sure a multiple of page limit
 
 module.exports = function (state, emitter) {
+  var _collection;
+
   //  const codeFactory = new HydraCodeGenerator()
   //setTimeout(() => { window.location.reload() }, 30000) // auto reload
   //  console.log(state)
@@ -59123,15 +59125,16 @@ module.exports = function (state, emitter) {
       total: null,
       sketches: [],
       limit: 6,
-      offset: 0
+      offset: 0,
+      status: 0
     },
-    collection: _defineProperty({
+    collection: (_collection = {
       user: null,
       sketches: [],
       offset: 0,
       total: null,
       limit: 6
-    }, "offset", 0),
+    }, _defineProperty(_collection, "offset", 0), _defineProperty(_collection, "status", 0), _collection),
     viewer: {
       selected: null,
       status: 0
@@ -59166,6 +59169,7 @@ module.exports = function (state, emitter) {
 
     if (state.currentView === 'collection') {
       state.views.collection.user = state.params.user;
+      state.views.collection.status = 0;
       getOrdersByUser(state.views.collection.user).then(function (data) {
         // console.log('got by user', data)
         // state.views.collection
@@ -59177,6 +59181,7 @@ module.exports = function (state, emitter) {
         var sketches = state.views.collection.entries; //.slice(offset, offset+limit)
 
         state.views.collection.sketches = sketches.map(getSketch);
+        state.views.collection.status = 1;
         emitter.emit('render');
       }).catch(function (error) {
         return console.error(error);
@@ -59207,6 +59212,7 @@ module.exports = function (state, emitter) {
     state.db.maxPages = Math.floor(state.db.totalCount / state.views.gallery.limit);
     state.db.pagesLoaded = Math.floor(state.db.entries.length / state.views.gallery.limit);
     console.log('entries', state.db.entries);
+    state.views.gallery.status = 1;
     updateSketches();
     emitter.emit('render');
   }).catch(function (error) {
@@ -59231,6 +59237,7 @@ module.exports = function (state, emitter) {
     if (state.views.gallery.offset >= state.db.entries.length) {
       console.log(state.views.gallery.offset, state.db.pagesLoaded, 'need to load more from database'); //const offset = Math.floor(state.db.entries.length/MAX_QUERY)
 
+      state.views.gallery.status = 0;
       getRecentObjects({
         offset: state.db.entries.length,
         limit: MAX_QUERY
@@ -59241,6 +59248,7 @@ module.exports = function (state, emitter) {
         state.db.maxPages = Math.floor(state.db.totalCount / state.views.gallery.limit);
         state.db.pagesLoaded = Math.floor(state.db.entries.length / state.views.gallery.limit);
         console.log('entries', state.db.entries);
+        state.views.gallery.status = 1;
         updateSketches();
         emitter.emit('render');
       });
@@ -59807,6 +59815,10 @@ var generateStyle = function generateStyle() {
   return "color:".concat(arrayRand(colors), ";\n               ").concat(generateShadow(), "\n               font-weight:").concat(rand(200, 1000), ";\n               font-size:").concat(rand(16, 18), "px;\n                max-width: ").concat(rand(200, 200), "px;\n               background:").concat(arrayRand(colors), ";\n               transform: translate: 50% 50%;\n               /*transform: rotate(").concat(rand(-20, 20), "deg);*/");
 };
 
+var generateLoadingStyle = function generateLoadingStyle() {
+  return "color:".concat(arrayRand(colors), ";\n               ").concat(generateShadow(), "\n               font-weight:").concat(rand(200, 1000), ";\n               /*font-size:").concat(rand(16, 18), "px;*/\n               /* max-width: ").concat(rand(200, 200), "px; */\n               background:").concat(arrayRand(colors), ";\n               transform: translate: 50% 50%;\n               transform: rotate(").concat(rand(-20, 20), "deg);");
+};
+
 var slogan = function slogan() {
   var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
       _ref$_text = _ref._text,
@@ -59861,6 +59873,7 @@ module.exports = {
   slogan: slogan,
   generateStyle: generateStyle,
   generateShadow: generateShadow,
+  generateLoadingStyle: generateLoadingStyle,
   randomFont: randomFont
 }; //
 // ///*background-color:${arrayRand(colors)}*/
@@ -59869,120 +59882,6 @@ module.exports = {
 //     ${collection(30)}
 //   </div>`
 // }
-},{"choo/html":"node_modules/choo/html/index.js"}],"app/views/collection.js":[function(require,module,exports) {
-var _templateObject, _templateObject2;
-
-function _taggedTemplateLiteral(strings, raw) { if (!raw) { raw = strings.slice(0); } return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
-
-var html = require('choo/html');
-
-var Iframe = require('./clickable-iframe.js');
-
-var encodeBase64 = function encodeBase64(text) {
-  return btoa(encodeURIComponent(text));
-};
-
-var _require = require('./slogans.js'),
-    title = _require.title,
-    slogan = _require.slogan; // const hydraURL = (code) => `https://hydra-lofi.glitch.me?code=${encodeBase64(code)}`
-// const hydraURL = (code) => `${window.location.origin}/lofi-renderer.html?code=${encodeBase64(code)}`
-
-
-var rand = function rand(min, max) {
-  return min + Math.random() * (max - min);
-}; // ${slogan({ classes:"absolute ph2", styles: "top:-30px;"})}
-//   ${slogan({ classes:"absolute ph2", styles: "bottom:-30px;"})}
-
-
-var showSketches = function showSketches(sketches, state, emit) {
-  return sketches.map(function (sketch, index) {
-    var w = rand(300, 450); // const iframe = html`  <iframe
-    //     src=${sketch.url}
-    //     class="RELATIVE"
-    //     width="${w}px"
-    //     height="${w}px"
-    //     style="width:${w}px;height:${w}px"
-    //
-    //   >
-    //   </iframe>`
-    // console.log('tag',  `collection-${index}`)
-
-    var iframe = state.cache(Iframe, "collection-".concat(index)).render({
-      src: sketch.url,
-      class: "relative pointer",
-      width: "".concat(w, "px"),
-      height: "".concat(w, "px"),
-      style: "width:".concat(w, "px;height:").concat(w, "px"),
-      onclick: function onclick() {
-        emit("select sketch", sketch);
-      }
-    }); //  console.log("iframe", iframe.contentWindow)
-
-    window.iframe = iframe; //  iframe.contentWindow.onclick = () => emit("select sketch", sketch)
-
-    return html(_templateObject || (_templateObject = _taggedTemplateLiteral(["\n  <div\n    class=\"dib pa4 relative animated-positions pointer\"\n    style=\"top: ", "px; left: ", "px\"\n    onclick=\"", "\"\n  >\n\n  ", "\n    <div class=\"f6\"> ", " </div>\n    <div class=\"f7\"> ", " </div>\n    <!-- <div class=\"f7\"> ", " </div> -->\n  </div>"])), rand(-20, 20), rand(-10, 40), function () {
-      emit("select sketch", sketch);
-    }, iframe, sketch.fromAccount.name, new Date(sketch.createdAt).toLocaleString(), sketch.id); // return html`
-    // <a
-    //   class="dib pa3 relative animated-positions"
-    //   style="top: ${rand(-10, 10)}px; left: ${rand(-10, 40)}px"
-    //   href="${window.location.pathname}#${sketch.hash}"
-    // >
-    // ${iframe}
-    //   <div> ${sketch.owner} </div>
-    // </a>`
-  });
-};
-
-module.exports = function (collection, state, emit) {
-  return html(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["\n  <div class=\"\">\n    <!-- <div class=\"pa2\">\n      ", "\n      ", "\n    </div> -->\n    ", "\n    <!-- <div class=\"main-heading\">\n      <div > UNIQUE MAGICAL BROWSER OBJECTS </div>\n      <div class=\"pa4\"> get yours now! </div>\n      <div> limited time only </div>\n    </div> -->\n    <!-- <div class=\"fixed bottom-0 right-0 ma4\" onclick=", ">\n      next\n    </div> -->\n  </div>\n"])), slogan({
-    classes: "absolute"
-  }), slogan({
-    classes: "absolute"
-  }), showSketches(collection.sketches, state, emit), function () {
-    return emit('load next');
-  });
-};
-},{"choo/html":"node_modules/choo/html/index.js","./clickable-iframe.js":"app/views/clickable-iframe.js","./slogans.js":"app/views/slogans.js"}],"app/views/viewer.js":[function(require,module,exports) {
-var _templateObject, _templateObject2;
-
-function _taggedTemplateLiteral(strings, raw) { if (!raw) { raw = strings.slice(0); } return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
-
-var html = require('choo/html'); //bg-black pv1 fr br-pill  white db ma1 shadow
-//  <div class="pr5-ns w4-ns mw7 w-100 flex-auto-ns">
-
-
-module.exports = function (viewer, emit) {
-  console.log('VIEWER', viewer);
-  var width = window.innerWidth > 860 ? Math.min(window.innerWidth / 2, window.innerHeight - 120) : window.innerWidth - 30;
-
-  var iframe = function iframe() {
-    return html(_templateObject || (_templateObject = _taggedTemplateLiteral(["\n<div class=\"flex flex-column justify-center\">\n      <iframe\n        src=", "\n        class=\"\"\n        style=\"width:", "px;height:", "px;transition:width 1s, height 1s;\"\n\n      >\n      </iframe>\n</div>\n <div class=\"flex flex-column pa2 justify-center items-start mw-100\">\n\n    <div class=\" f5 pa2 frame shadow serif ma2\">\n      <div>  ", " </div>\n      <div class=\"\"> made possible by\n      <span class=\"f3 b dim pointer\" onclick=", ">", " </span></div>\n      <div> ", " </div>\n    </div>\n    <div class=\"pa3 mw6 frame shadow overflow-y-auto mv2\" style=\"max-height:", "px\">\n      <pre class=\"f5 serif text-shadow\"> ", " </pre>\n    </div>\n    <!-- <div onclick=", " class=\"dib ph4 pv1 w4 black ma1 shadow dim pointer\"> SHOW Gallery </div> -->\n  </div>\n"])), viewer.selected.url, width, width, viewer.selected.id, function () {
-      return emit('show user collection', viewer.selected.fromAccount);
-    }, viewer.selected.fromAccount.name, new Date(viewer.selected.createdAt).toLocaleString(), window.innerHeight * 0.7, viewer.selected.code, function () {
-      return emit('clear sketch');
-    });
-  }; //  ${viewer.sketch === null ? '' : iframe()}
-
-
-  var content = '';
-
-  if (viewer.status === 2) {
-    content = 'the UNIQUE MAGICAL BROWSER OBJECT at this link does not exist yet. create more UNIQUE BROWSER OBJECTS by donating to hydra at _______';
-  } else if (viewer.status === 1) {
-    content = iframe();
-  } else {
-    content = 'loading ..';
-  }
-
-  return html(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["\n  <!-- <div class=\"flex flex-column h-100\"> -->\n    <div class=\"w-100 flex items-center flex-auto flex-column flex-row-l pa2 overflow-y-auto\">\n      ", "\n    </div>\n\n  "])), content);
-}; // <!-- <div class="pv3 flex">
-//   <!-- <div class="bg-white ph4 pv1 fr br-pill  black db ma1 shadow dim pointer" onclick=${() => emit('clear sketch')}> SHOW MOST RECENT </div> -->
-//   <!-- <div class="dib flex-auto f4 pa2">$$$ UNIQUE MAGICAL BROWSER OBJECTS $$$</div> -->
-//   <div onclick=${()=> emit('clear sketch')} class="dib ph4 pv1  black ma1 shadow dim pointer"> SHOW Gallery </div>
-//   <a href="https://opencollective.com/hydra-synth/contribute/unique-browser-object-25415" target="_blank" ><div class="dib bg-yellow ph4 pv1  black ma1 shadow dim pointer"> GET YOURS TODAY </div></a>
-// </div> -->
-// <!-- </div> -->
 },{"choo/html":"node_modules/choo/html/index.js"}],"app/views/animated-slogan.js":[function(require,module,exports) {
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
@@ -60040,7 +59939,7 @@ module.exports = /*#__PURE__*/function (_Component) {
 
       this.interval = setInterval(function () {
         _this2.rerender();
-      }, 2000 + Math.random() * 4000);
+      }, this.cycleTime + Math.random() * this.cycleTime * 0.3);
     }
   }, {
     key: "unload",
@@ -60058,13 +59957,154 @@ module.exports = /*#__PURE__*/function (_Component) {
       var cycleTime = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1000;
       var el = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : slogan;
       console.log('rendering');
+      this.cycleTime = cycleTime;
       return html(_templateObject || (_templateObject = _taggedTemplateLiteral(["<div>", "</div>"])), el());
     }
   }]);
 
   return AnimatedSlogan;
 }(Component);
-},{"choo/html":"node_modules/choo/html/index.js","choo/component":"node_modules/choo/component/index.js","./slogans.js":"app/views/slogans.js"}],"app/views/info.js":[function(require,module,exports) {
+},{"choo/html":"node_modules/choo/html/index.js","choo/component":"node_modules/choo/component/index.js","./slogans.js":"app/views/slogans.js"}],"app/views/loading.js":[function(require,module,exports) {
+var _templateObject, _templateObject2;
+
+function _taggedTemplateLiteral(strings, raw) { if (!raw) { raw = strings.slice(0); } return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
+
+var html = require('choo/html');
+
+var AnimatedSlogan = require('./animated-slogan.js');
+
+var _require = require('./slogans.js'),
+    title = _require.title,
+    slogan = _require.slogan,
+    generateLoadingStyle = _require.generateLoadingStyle,
+    randomFont = _require.randomFont;
+
+module.exports = function (state) {
+  var buyNow = state.cache(AnimatedSlogan, 'loading').render(300, function () {
+    var style = generateLoadingStyle();
+    return html(_templateObject || (_templateObject = _taggedTemplateLiteral(["<div class=\"w4 pa2 h-100 ba b2 pointer br-pill dim tc ", "\"  style=\"", "\"> LOADING MAGICAL OBJECTS....  </div>"])), randomFont(), style);
+  });
+  return html(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["<div class=\"fixed w-100 h-100 f1 flex items-center justify-center\">\n  ", "\n  </div>"])), buyNow);
+};
+},{"choo/html":"node_modules/choo/html/index.js","./animated-slogan.js":"app/views/animated-slogan.js","./slogans.js":"app/views/slogans.js"}],"app/views/collection.js":[function(require,module,exports) {
+var _templateObject, _templateObject2;
+
+function _taggedTemplateLiteral(strings, raw) { if (!raw) { raw = strings.slice(0); } return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
+
+var html = require('choo/html');
+
+var Iframe = require('./clickable-iframe.js');
+
+var encodeBase64 = function encodeBase64(text) {
+  return btoa(encodeURIComponent(text));
+};
+
+var _require = require('./slogans.js'),
+    title = _require.title,
+    slogan = _require.slogan;
+
+var loading = require('./loading.js'); // const hydraURL = (code) => `https://hydra-lofi.glitch.me?code=${encodeBase64(code)}`
+// const hydraURL = (code) => `${window.location.origin}/lofi-renderer.html?code=${encodeBase64(code)}`
+
+
+var rand = function rand(min, max) {
+  return min + Math.random() * (max - min);
+}; // ${slogan({ classes:"absolute ph2", styles: "top:-30px;"})}
+//   ${slogan({ classes:"absolute ph2", styles: "bottom:-30px;"})}
+
+
+var showSketches = function showSketches(sketches, state, emit) {
+  return sketches.map(function (sketch, index) {
+    var w = rand(300, 450); // const iframe = html`  <iframe
+    //     src=${sketch.url}
+    //     class="RELATIVE"
+    //     width="${w}px"
+    //     height="${w}px"
+    //     style="width:${w}px;height:${w}px"
+    //
+    //   >
+    //   </iframe>`
+    // console.log('tag',  `collection-${index}`)
+
+    var iframe = state.cache(Iframe, "collection-".concat(index)).render({
+      src: sketch.url,
+      class: "relative pointer",
+      width: "".concat(w, "px"),
+      height: "".concat(w, "px"),
+      style: "width:".concat(w, "px;height:").concat(w, "px"),
+      onclick: function onclick() {
+        emit("select sketch", sketch);
+      }
+    }); //  console.log("iframe", iframe.contentWindow)
+
+    window.iframe = iframe; //  iframe.contentWindow.onclick = () => emit("select sketch", sketch)
+
+    return html(_templateObject || (_templateObject = _taggedTemplateLiteral(["\n  <div\n    class=\"dib pa4 relative animated-positions pointer\"\n    style=\"top: ", "px; left: ", "px\"\n    onclick=\"", "\"\n  >\n\n  ", "\n    <div class=\"f6\"> ", " </div>\n    <div class=\"f7\"> ", " </div>\n    <!-- <div class=\"f7\"> ", " </div> -->\n  </div>"])), rand(-20, 20), rand(-10, 40), function () {
+      emit("select sketch", sketch);
+    }, iframe, sketch.fromAccount.name, new Date(sketch.createdAt).toLocaleString(), sketch.id); // return html`
+    // <a
+    //   class="dib pa3 relative animated-positions"
+    //   style="top: ${rand(-10, 10)}px; left: ${rand(-10, 40)}px"
+    //   href="${window.location.pathname}#${sketch.hash}"
+    // >
+    // ${iframe}
+    //   <div> ${sketch.owner} </div>
+    // </a>`
+  });
+};
+
+module.exports = function (collection, state, emit) {
+  return html(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["\n  <div class=\"\">\n    <!-- <div class=\"pa2\">\n      ", "\n      ", "\n    </div> -->\n    ", "\n    ", "\n    <!-- <div class=\"main-heading\">\n      <div > UNIQUE MAGICAL BROWSER OBJECTS </div>\n      <div class=\"pa4\"> get yours now! </div>\n      <div> limited time only </div>\n    </div> -->\n    <!-- <div class=\"fixed bottom-0 right-0 ma4\" onclick=", ">\n      next\n    </div> -->\n  </div>\n"])), slogan({
+    classes: "absolute"
+  }), slogan({
+    classes: "absolute"
+  }), collection.status === 0 ? loading(state) : '', showSketches(collection.sketches, state, emit), function () {
+    return emit('load next');
+  });
+};
+},{"choo/html":"node_modules/choo/html/index.js","./clickable-iframe.js":"app/views/clickable-iframe.js","./slogans.js":"app/views/slogans.js","./loading.js":"app/views/loading.js"}],"app/views/viewer.js":[function(require,module,exports) {
+var _templateObject, _templateObject2;
+
+function _taggedTemplateLiteral(strings, raw) { if (!raw) { raw = strings.slice(0); } return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
+
+var html = require('choo/html');
+
+var loading = require('./loading.js'); //bg-black pv1 fr br-pill  white db ma1 shadow
+//  <div class="pr5-ns w4-ns mw7 w-100 flex-auto-ns">
+
+
+module.exports = function (viewer, emit, state) {
+  console.log('VIEWER', viewer);
+  var width = window.innerWidth > 860 ? Math.min(window.innerWidth / 2, window.innerHeight - 120) : window.innerWidth - 30;
+
+  var iframe = function iframe() {
+    return html(_templateObject || (_templateObject = _taggedTemplateLiteral(["\n<div class=\"flex flex-column justify-center\">\n      <iframe\n        src=", "\n        class=\"\"\n        style=\"width:", "px;height:", "px;transition:width 1s, height 1s;\"\n\n      >\n      </iframe>\n</div>\n <div class=\"flex flex-column pa2 justify-center items-start mw-100\">\n\n    <div class=\" f5 pa2 frame shadow serif ma2\">\n      <div>  ", " </div>\n      <div class=\"\"> made possible by\n      <span class=\"f3 b dim pointer\" onclick=", ">", " </span></div>\n      <div> ", " </div>\n    </div>\n    <div class=\"pa3 mw6 frame shadow overflow-y-auto mv2\" style=\"max-height:", "px\">\n      <pre class=\"f5 serif text-shadow\"> ", " </pre>\n    </div>\n    <!-- <div onclick=", " class=\"dib ph4 pv1 w4 black ma1 shadow dim pointer\"> SHOW Gallery </div> -->\n  </div>\n"])), viewer.selected.url, width, width, viewer.selected.id, function () {
+      return emit('show user collection', viewer.selected.fromAccount);
+    }, viewer.selected.fromAccount.name, new Date(viewer.selected.createdAt).toLocaleString(), window.innerHeight * 0.7, viewer.selected.code, function () {
+      return emit('clear sketch');
+    });
+  }; //  ${viewer.sketch === null ? '' : iframe()}
+
+
+  var content = '';
+
+  if (viewer.status === 2) {
+    content = 'the UNIQUE MAGICAL BROWSER OBJECT at this link does not exist yet. create more UNIQUE BROWSER OBJECTS by donating to hydra at _______';
+  } else if (viewer.status === 1) {
+    content = iframe();
+  } else {
+    content = loading(state);
+  }
+
+  return html(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["\n  <!-- <div class=\"flex flex-column h-100\"> -->\n    <div class=\"w-100 flex items-center justify-center flex-auto flex-column flex-row-l pa2 overflow-y-auto\">\n      ", "\n    </div>\n\n  "])), content);
+}; // <!-- <div class="pv3 flex">
+//   <!-- <div class="bg-white ph4 pv1 fr br-pill  black db ma1 shadow dim pointer" onclick=${() => emit('clear sketch')}> SHOW MOST RECENT </div> -->
+//   <!-- <div class="dib flex-auto f4 pa2">$$$ UNIQUE MAGICAL BROWSER OBJECTS $$$</div> -->
+//   <div onclick=${()=> emit('clear sketch')} class="dib ph4 pv1  black ma1 shadow dim pointer"> SHOW Gallery </div>
+//   <a href="https://opencollective.com/hydra-synth/contribute/unique-browser-object-25415" target="_blank" ><div class="dib bg-yellow ph4 pv1  black ma1 shadow dim pointer"> GET YOURS TODAY </div></a>
+// </div> -->
+// <!-- </div> -->
+},{"choo/html":"node_modules/choo/html/index.js","./loading.js":"app/views/loading.js"}],"app/views/info.js":[function(require,module,exports) {
 var _templateObject, _templateObject2;
 
 function _taggedTemplateLiteral(strings, raw) { if (!raw) { raw = strings.slice(0); } return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
@@ -60269,7 +60309,7 @@ function individualView(state, emit) {
   var nav = html(_templateObject7 || (_templateObject7 = _taggedTemplateLiteral(["<div onclick=", " class=\"dib ph4 pv1 black ma1 dim pointer\"> back to gallery </div>"])), function () {
     return emit('clear sketch');
   });
-  var content = html(_templateObject8 || (_templateObject8 = _taggedTemplateLiteral(["", " ", ""])), viewer(state.views.viewer, emit), navContainer(nav));
+  var content = html(_templateObject8 || (_templateObject8 = _taggedTemplateLiteral(["", ""])), viewer(state.views.viewer, emit, state));
   return wrapper(content, state, emit);
 }
 },{"choo/html":"node_modules/choo/html/index.js","choo-devtools":"node_modules/choo-devtools/index.js","choo":"node_modules/choo/index.js","./store.js":"app/store.js","./views/collection.js":"app/views/collection.js","./views/viewer.js":"app/views/viewer.js","./views/slogans.js":"app/views/slogans.js","./config.js":"app/config.js","./views/info.js":"app/views/info.js","./views/bottom-nav.js":"app/views/bottom-nav.js","./views/footer.js":"app/views/footer.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
@@ -60300,7 +60340,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50328" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "50963" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
