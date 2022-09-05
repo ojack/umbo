@@ -57828,7 +57828,7 @@ module.exports = {
 module.exports = {
   development: {
     entrypoint: 'index.html',
-    entrypointBase: ''
+    entrypointBase: 'sdf'
   },
   production: {
     // entrypoint: 'index.html'
@@ -59157,7 +59157,8 @@ module.exports = function (state, emitter) {
     route = separate[0];
     console.log('route', state.route, state.params, route); //  state.currentView = hash
 
-    state.currentView = route;
+    state.currentView = route.replace('index.html', '');
+    console.log(state.currentView);
 
     if (state.currentView === 'collection') {
       state.views.collection.user = state.params.user;
@@ -60295,7 +60296,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61271" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62365" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
