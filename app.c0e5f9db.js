@@ -57771,12 +57771,88 @@ var slug = "hydra-synth"; //const variables = gql`{"slug": "babel"}`
 var orderQuery = function orderQuery() {
   var id = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "eejoxl3a-z45w9pao-5rrqy870-mgkbrvdn";
   return "{\n    order(order: {id: \"".concat(id, "\"}){\n        id\n        createdAt\n        legacyId\n        amount {\n          value\n          currency\n        }\n        quantity\n        fromAccount {\n           name\n          slug\n        }\n        toAccount {\n          slug\n        }\n      }\n  }");
-};
+}; // const orderQuery = (id = "eejoxl3a-z45w9pao-5rrqy870-mgkbrvdn") =>  `{
+//   order(order: {id: "eejoxl3a-z45w9pao-5rrqy870-mgkbrvdn"}){
+//       id
+//       createdAt
+//       legacyId
+//       amount {
+//         value
+//         currency
+//       }
+//       quantity
+//       fromAccount {
+//          name
+//         slug
+//       }
+//       toAccount {
+//         slug
+//       }
+//     }
+// }`
+// const orderQuery = (id = "eejoxl3a-z45w9pao-5rrqy870-mgkbrvdn") =>  `{
+//   transactions(id: "${id}"){
+//       id
+//       createdAt
+//       legacyId
+//       amount {
+//         value
+//         currency
+//       }
+//       quantity
+//       fromAccount {
+//          name
+//         slug
+//       }
+//       toAccount {
+//         slug
+//       }
+//     }
+// }`
+// const userQuery = (user) => `
+//   {
+//     transactions(limit: 100, type: CREDIT, account: { slug: "${slug}"}, searchTerm: "${user}") {
+//       totalCount
+//       nodes {
+//         id
+//         createdAt
+//         fromAccount {
+//           slug
+//           name
+//         }
+//       }
+//     }
+//   }
+// `
+
 
 var userQuery = function userQuery(user) {
-  return "\n  {\n    orders(limit: 100, account: { slug: \"".concat(slug, "\"}, searchTerm: \"").concat(user, "\") {\n      totalCount\n      nodes {\n        id\n        createdAt\n        tier {\n          slug\n          id\n        }\n        fromAccount {\n          slug\n          name\n        }\n      }\n    }\n  }\n");
+  return "\n  {\n    orders(limit: 100, account: { slug: \"".concat(slug, "\"}, searchTerm: \"").concat(user, "\") {\n      totalCount\n      nodes {\n        id\n        createdAt\n        fromAccount {\n          slug\n          name\n        }\n      }\n    }\n  }\n");
 }; // const recentObjectsQuery = (offset = 0, limit=10) => `{
 //   tier(tier: { id: "${tier}" }) {
+//     name
+//     slug
+//     orders(limit: ${limit}, offset: ${offset}) {
+//       totalCount
+//       nodes {
+//         id
+//         createdAt
+//         tier {
+//           slug
+//         }
+//         fromAccount {
+//           slug
+//           name
+//         }
+//         toAccount {
+//           slug
+//         }
+//       }
+//     }
+//   }
+// }`
+// const recentObjectsQuery = ({offset = 0, limit = 12} = {}) => `{
+//   account(slug: "${slug}" ) {
 //     name
 //     slug
 //     orders(limit: ${limit}, offset: ${offset}) {
@@ -57807,8 +57883,28 @@ var recentObjectsQuery = function recentObjectsQuery() {
       _ref$limit = _ref.limit,
       limit = _ref$limit === void 0 ? 12 : _ref$limit;
 
-  return "{\n  account(slug: \"".concat(slug, "\" ) {\n    name\n    slug\n    orders(limit: ").concat(limit, ", offset: ").concat(offset, ") {\n      totalCount\n      nodes {\n        id\n        createdAt\n        tier {\n          slug\n        }\n        fromAccount {\n          slug\n          name\n        }\n        toAccount {\n          slug\n        }\n      }\n    }\n  }\n}");
-};
+  return "{\n  account(slug: \"".concat(slug, "\" ) {\n    name\n    slug\n    orders(limit: ").concat(limit, ", offset: ").concat(offset, ") {\n      totalCount\n      nodes {\n        id\n        createdAt\n        fromAccount {\n          slug\n          name\n        }\n        toAccount {\n          slug\n        }\n      }\n    }\n  }\n}");
+}; // const recentObjectsQuery = ({offset = 0, limit = 12} = {}) => `{
+//   account(slug: "${slug}" ) {
+//     name
+//     slug
+//     transactions(limit: ${limit}, offset: ${offset}, type: CREDIT) {
+//       totalCount
+//       nodes {
+//         id
+//         createdAt
+//         fromAccount {
+//           slug
+//           name
+//         }
+//         toAccount {
+//           slug
+//         }
+//       }
+//     }
+//   }
+// }`
+
 
 module.exports = {
   getOrderById: function getOrderById() {
@@ -59166,11 +59262,10 @@ module.exports = function (state, emitter) {
     route = route.replace(/\\|\//g, '');
     route = route.replace('*', '');
     var separate = route.split(':');
-    route = separate[0];
-    console.log('route', state.route, state.params, route, entrypoint, entrypointBase); //  state.currentView = hash
+    route = separate[0]; // console.log('route', state.route, state.params, route, entrypoint, entrypointBase)
+    //  state.currentView = hash
 
-    state.currentView = route.replace('index.html', '');
-    console.log(state.currentView);
+    state.currentView = route.replace('index.html', ''); // console.log(state.currentView)
 
     if (state.currentView === 'collection') {
       state.views.collection.user = state.params.user;
@@ -59211,12 +59306,14 @@ module.exports = function (state, emitter) {
     offset: 0,
     limit: MAX_QUERY
   }).then(function (data) {
-    console.log(' got gallery! ', data);
+    console.log(' got gallery! ', data); // state.db.totalCount = data.account.orders.totalCount
+    // state.db.entries = data.account.orders.nodes
+
     state.db.totalCount = data.account.orders.totalCount;
     state.db.entries = data.account.orders.nodes;
     state.db.maxPages = Math.floor(state.db.totalCount / state.views.gallery.limit);
-    state.db.pagesLoaded = Math.floor(state.db.entries.length / state.views.gallery.limit);
-    console.log('entries', state.db.entries);
+    state.db.pagesLoaded = Math.floor(state.db.entries.length / state.views.gallery.limit); // console.log('entries', state.db.entries)
+
     state.views.gallery.status = 1;
     updateSketches();
     emitter.emit('render');
@@ -59240,8 +59337,8 @@ module.exports = function (state, emitter) {
     state.views.gallery.offset += limit;
 
     if (state.views.gallery.offset >= state.db.entries.length) {
-      console.log(state.views.gallery.offset, state.db.pagesLoaded, 'need to load more from database'); //const offset = Math.floor(state.db.entries.length/MAX_QUERY)
-
+      // console.log(state.views.gallery.offset, state.db.pagesLoaded, 'need to load more from database')
+      //const offset = Math.floor(state.db.entries.length/MAX_QUERY)
       state.views.gallery.status = 0;
       getRecentObjects({
         offset: state.db.entries.length,
@@ -59251,8 +59348,8 @@ module.exports = function (state, emitter) {
         state.db.totalCount = data.account.orders.totalCount;
         state.db.entries = state.db.entries.concat(data.account.orders.nodes);
         state.db.maxPages = Math.floor(state.db.totalCount / state.views.gallery.limit);
-        state.db.pagesLoaded = Math.floor(state.db.entries.length / state.views.gallery.limit);
-        console.log('entries', state.db.entries);
+        state.db.pagesLoaded = Math.floor(state.db.entries.length / state.views.gallery.limit); // console.log('entries', state.db.entries)
+
         state.views.gallery.status = 1;
         updateSketches();
         emitter.emit('render');
@@ -59276,8 +59373,7 @@ module.exports = function (state, emitter) {
   if (state.currentView === 'viewer') {
     if (state.params.id) {
       getOrderById(state.params.id).then(function (data) {
-        console.log('got by id', data.order.toAccount.slug);
-
+        // console.log('got by id', data.order.toAccount.slug)
         if (data.order.toAccount.slug === "hydra-synth") {
           state.views.viewer.selected = getSketch(data.order);
           state.views.viewer.status = 1;
@@ -59310,7 +59406,7 @@ module.exports = function (state, emitter) {
     updatePageState();
   });
   emitter.on("select sketch", function (sketch, index) {
-    console.log("selecting", sketch, index, state);
+    // console.log("selecting", sketch, index, state)
     state.views.viewer.selected = sketch;
     state.views.viewer.status = 1; //  window.history.pushState({}, '', "${window.location.pathname}#${sketch.hash}")
 
@@ -59322,7 +59418,7 @@ module.exports = function (state, emitter) {
     emitter.emit('pushState', "".concat(window.location.pathname, "#collection/").concat(user.slug));
   });
   emitter.on('show info', function () {
-    console.log('showing info');
+    // console.log('showing info')
     emitter.emit('pushState', "".concat(window.location.pathname, "#create"));
   });
   emitter.on("clear sketch", function () {
@@ -59801,7 +59897,7 @@ var arrayRand = function arrayRand(arr) {
 };
 
 var title = "UNIQUE MAGICAL BROWSER OBJECTS™";
-var text = ["limited time only", "never before seen", "WEB 8.0 certified", "100% unique", "$$$$", "REAL ART GUARANTEE", "get yours today", "add ART and MAGIC to the world", "render the future", "free shipping", // "your very own piece of the internet",
+var text = ["limited time only", "get yours today", "never before seen", "support hydra synth", "WEB 8.0 certified", "get yours today", "100% unique", "$$$$", "REAL ART GUARANTEE", "get yours today", "add ART and MAGIC to the world", "render the future", "free shipping", // "your very own piece of the internet",
 //"create the future", "LIVE, COMPUTER GENERATED BROWSER OBJECTS",
 "as seen on the internet"];
 var buyNowText = ["get yours today", "support hydra synth"];
@@ -59817,7 +59913,7 @@ var randomFont = function randomFont() {
 };
 
 var generateStyle = function generateStyle() {
-  return "color:".concat(arrayRand(colors), ";\n               ").concat(generateShadow(), "\n               font-weight:").concat(rand(200, 1000), ";\n               font-size:").concat(rand(16, 18), "px;\n                max-width: ").concat(rand(200, 200), "px;\n               background:").concat(arrayRand(colors), ";\n               transform: translate: 50% 50%;\n               /*transform: rotate(").concat(rand(-20, 20), "deg);*/");
+  return "color:".concat(arrayRand(colors), ";\n               ").concat(generateShadow(), "\n               font-weight:").concat(rand(200, 1000), ";\n               font-size:").concat(rand(16, 18), "px;\n                max-width: ").concat(rand(200, 200), "px;\n               background:").concat(arrayRand(colors), ";\n               transform: translate: 50% 50%;\n               transform: rotate(").concat(rand(-20, 20), "deg);");
 };
 
 var generateLoadingStyle = function generateLoadingStyle() {
@@ -59942,7 +60038,7 @@ module.exports = /*#__PURE__*/function (_Component) {
     value: function load(element) {
       var _this2 = this;
 
-      console.log('rendering with cycletime', this.cycleTime);
+      // console.log('rendering with cycletime', this.cycleTime)
       var ct = this.cycleTime;
       this.interval = setInterval(function () {
         _this2.rerender();
@@ -59963,7 +60059,7 @@ module.exports = /*#__PURE__*/function (_Component) {
     value: function createElement() {
       var cycleTime = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 2000;
       var el = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : slogan;
-      console.log('rendering');
+      // console.log('rendering')
       this.cycleTime = cycleTime;
       return html(_templateObject || (_templateObject = _taggedTemplateLiteral(["<div>", "</div>"])), el());
     }
@@ -60022,7 +60118,7 @@ var rand = function rand(min, max) {
 
 var showSketches = function showSketches(sketches, state, emit) {
   return sketches.map(function (sketch, index) {
-    var w = rand(300, 450); // const iframe = html`  <iframe
+    var w = rand(200, 350); // const iframe = html`  <iframe
     //     src=${sketch.url}
     //     class="RELATIVE"
     //     width="${w}px"
@@ -62014,21 +62110,34 @@ var html = require('choo/html');
 
 var raw = require('choo/html/raw');
 
+var AnimatedSlogan = require('./animated-slogan.js');
+
 var loading = require('./loading.js');
 
 var prism = require('prismjs'); //bg-black pv1 fr br-pill  white db ma1 shadow
 //  <div class="pr5-ns w4-ns mw7 w-100 flex-auto-ns">
 
 
+var renderCount = 1;
+
 module.exports = function (viewer, emit, state) {
   console.log('VIEWER', viewer);
   var width = window.innerWidth > 860 ? Math.min(window.innerWidth / 2, window.innerHeight - 120) : window.innerWidth - 30;
 
   var iframe = function iframe() {
-    var highlighted = prism.highlight(viewer.selected.code, prism.languages.javascript, 'javascript');
-    return html(_templateObject || (_templateObject = _taggedTemplateLiteral(["\n<div class=\"flex flex-column justify-center\">\n      <iframe\n        src=", "\n        class=\"\"\n        style=\"width:", "px;height:", "px;transition:width 1s, height 1s;\"\n\n      >\n      </iframe>\n</div>\n <div class=\"flex flex-column pa2 justify-center items-start mw-100\">\n\n    <div class=\" f5 pa2 frame shadow serif ma2\">\n      <div>  ", " </div>\n      <div class=\"\"> made possible by\n      <span class=\"f3 b dim pointer\" onclick=", ">", " </span></div>\n      <div> ", " </div>\n    </div>\n    <div class=\"pa3 mw6 frame shadow overflow-y-auto mv2\" style=\"max-height:", "px\">\n      <pre class=\"f6 serif text-shadow\">", "</pre>\n\n      <!--pre class=\"f5 serif text-shadow\"> ", " </pre-->\n    </div>\n    <!-- <div onclick=", " class=\"dib ph4 pv1 w4 black ma1 shadow dim pointer\"> SHOW Gallery </div> -->\n  </div>\n"])), viewer.selected.url, width, width, viewer.selected.id, function () {
+    var highlighted = prism.highlight(viewer.selected.code, prism.languages.javascript, 'javascript'); // const buyNow = state.cache(AnimatedSlogan, 1).render(3000, () => {
+    //   renderCount++
+    //   const style = generateStyle()
+    //   return html`<div class="w4 pa2 h-100 ba b2 pointer br-pill dim tc ${randomFont()}" onclick=${() => emit("show info")} style="${style}"> ${renderCount % 2 == 0 ? 'support hydra synth' : 'get yours here!'}  </div>`
+    // })
+
+    return html(_templateObject || (_templateObject = _taggedTemplateLiteral(["\n<div class=\"flex flex-column justify-center\">\n      <iframe\n        src=", "\n        class=\"\"\n        style=\"width:", "px;height:", "px;transition:width 1s, height 1s;\"\n\n      >\n      </iframe>\n</div>\n <div class=\"flex flex-column pa2 justify-center items-start mw-100\">\n\n    <div class=\" f5 pa2 frame shadow serif ma2\">\n      <div>  ", " </div>\n      <div class=\"\"> made possible by\n      <span class=\"f3 b dim pointer\" onclick=", ">", " </span></div>\n      <div> ", " </div>\n    </div>\n    <div class=\"pa3 mw6 frame shadow overflow-y-auto mv2\" style=\"max-height:", "px\">\n      <pre class=\"f6 serif text-shadow\">", "</pre>\n\n      <!--pre class=\"f5 serif text-shadow\"> ", " </pre-->\n    </div>\n    <div class=\"absolute pointer\" style=\"top: 15px; right: 15px;\" onclick=", ">\n    ", "\n    </div>\n    <button class=\"f7\" title=\"open in editor\" onclick=\"", "\">open in editor</button>\n    <!-- <div onclick=", " class=\"dib ph4 pv1 w4 black ma1 shadow dim pointer\"> SHOW Gallery </div> -->\n  </div>\n"])), viewer.selected.url, width, width, viewer.selected.id, function () {
       return emit('show user collection', viewer.selected.fromAccount);
     }, viewer.selected.fromAccount.name, new Date(viewer.selected.createdAt).toLocaleString(), window.innerHeight * 0.7, raw(highlighted), viewer.selected.code, function () {
+      return emit("show info");
+    }, state.cache(AnimatedSlogan, 2000).render(), function () {
+      return window.open("https://hydra.ojack.xyz/?code=".concat(btoa(encodeURIComponent(viewer.selected.code))));
+    }, function () {
       return emit('clear sketch');
     });
   }; //  ${viewer.sketch === null ? '' : iframe()}
@@ -62052,7 +62161,7 @@ module.exports = function (viewer, emit, state) {
 //   <a href="https://opencollective.com/hydra-synth/contribute/unique-browser-object-25415" target="_blank" ><div class="dib bg-yellow ph4 pv1  black ma1 shadow dim pointer"> GET YOURS TODAY </div></a>
 // </div> -->
 // <!-- </div> -->
-},{"choo/html":"node_modules/choo/html/index.js","choo/html/raw":"node_modules/choo/html/raw.js","./loading.js":"app/views/loading.js","prismjs":"node_modules/prismjs/prism.js"}],"app/views/info.js":[function(require,module,exports) {
+},{"choo/html":"node_modules/choo/html/index.js","choo/html/raw":"node_modules/choo/html/raw.js","./animated-slogan.js":"app/views/animated-slogan.js","./loading.js":"app/views/loading.js","prismjs":"node_modules/prismjs/prism.js"}],"app/views/info.js":[function(require,module,exports) {
 var _templateObject, _templateObject2;
 
 function _taggedTemplateLiteral(strings, raw) { if (!raw) { raw = strings.slice(0); } return Object.freeze(Object.defineProperties(strings, { raw: { value: Object.freeze(raw) } })); }
@@ -62094,7 +62203,7 @@ var baseStyle = function baseStyle() {
 
 
 module.exports = function (state, emit) {
-  return html(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["<div class=\"relative mw7 ph2 f4\" >\n  <div class=\"h3\" style=\"left:-120px;pointer-events:none\">\n  ", "\n\n  </div>\n\n\n <p>\n   Each donation to <a target=\"_blank\" href=\"https://opencollective.com/hydra-synth\">hydra community fund</a> generates a ", " that has never before existed in all of history.\n   The donations support <a target=\"_blank\" href=\"https://hydra.ojack.xyz\">hydra video synthesizer</a> and <a target=\"_blank\" href=\"https://hydra.ojack.xyz/grants/\">hydra community microgrants.</a> \n   </p>\n  <div class=\"f5\">\n  <h4>  HOW TO PARTICIPATE </h4>\n  <p> When you make a contribution of $5 or more to hydra (below), the transaction ID will be used to generate a UNIQUE MAGICAL BROWSER OBJECT\u2122 in your name.  Your UMBO\u2122 will appear at the top of the main gallery at <a href=\"https://uniquemagicalbrowserobjects.com\">https://uniquemagicalbrowserobjects.com</a>, along with a personalized link to the artwork and the source code that generates the artwork.\n You can also participate anonymously by choosing \"Incognito\" when donating.\n  <p>There is no limit to the number of UMBO\u2122 that you can create!\n  Each new object adds MORE ART and MORE MAGIC to the world.</p>\n  <p> No GIFs, No JPEGS, No  *.OBJ, No .mp4s, No ETH! only real live, browser-rendered art objects! ", " and support diy art software, open source communities, and ", ". </p>\n\n  </p>\n\n\n</div>\n\n<!-- <p>ACT NOW AND BE A PART OF WEB 8.0 !!!! Limited time only.</p> -->\n<div class=\"h4\" style=\"pointer-events:none\">", "", "</div>\n  <iframe src=\"https://opencollective.com/embed/hydra-synth/donate?useTheme=false\" style=\"width: 100%; height:600px;\" ></iframe >\n<div class=\"f5 pb6\">\n <h4>About Hydra</h4>\n\n<p style=", "><a target=\"_blank\" href=\"https://hydra.ojack.xyz\">Hydra</a> is a browser-based video synthesizer and live coding platform started by olivia jack in 2018. Its API is inspired by analog video synthesis, in which multiple visual sources (oscillators, cameras, application windows, other connected windows) can be transformed, modulated, and composited via combining sequences of functions. All volunteer-run and <a href=\"https://github.com/ojack/hydra\">open-source</a>, the project has a vibrant and growing community of users and contributers around the world.  The donations on this page go towards developing and maintaining hydra, as well as hosting community events and coding + video art workshops.</p>\n\n<h4>TECHNICAL DETAILS</h4>\n\n<p style=", ">Each contribution on this site generates a record of that transaction in the Open Collective database. The id of that transaction is used as a \"seed\" for a computer-generated sketch created using hydra.\nAn infinite number of sketches can be created in this way. There is no blockchain involved, and the only transactions are the donations to hydra that are recorded on Open Collective. All processing and rendering happens on your own device, based on the generated seed (there is no server). </p>\n\n<p>UNIQUE MAGICAL BROWSER OBJECTS\u2122 was created by <a target=\"_blank\" href=\"https://ojack.xyz\">olivia jack</a>, in collaboration with Ale Colmenotti, Canek Zapata, Flor de Fuego, and the hydra community.</p>\n<p>\nTech involved: <a target=\"_blank\" href=\"https://github.com/ojack/hydra-synth\">hydra synth</a>, <a target=\"_blank\" href=\"https://github.com/alecominotti/hydracodegenerator\">hydra code generator</a>, <a target=\"_blank\" href=\"https://www.choo.io/\">choo.io</a>, <a target=\"_blank\" href=\"https://docs.opencollective.com/help/contributing/development/api\">Open Collective GraphQL API</a>.\n</p>\n\nInspiration from fungible tokens, Walter Mercado, and Ron Popeil. For questions, please email <a target=\"_blank\" href=\"mailto:hydra.video.synth@gmail.com\">hydra.video.synth@gmail.com</a>\n</p>\n<p>\n(c) 2021 All UNIQUE MAGICAL BROWSER OBJECTS are licensed under a <a target=\"_blank\" href=\"http://creativecommons.org/licenses/by-nc-sa/3.0/\">Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.</a>\n</p>\n  </div>\n</div>\n  "])), state.cache(AnimatedSlogan, 2000).render(), span('UNIQUE MAGICAL BROWSER OBJECT™'), span('ACT NOW'), span("DIGITAL ABUNDANCE"), state.cache(AnimatedSlogan, 3).render(), state.cache(AnimatedSlogan, 4).render(), baseStyle(), baseStyle());
+  return html(_templateObject2 || (_templateObject2 = _taggedTemplateLiteral(["<div class=\"relative mw7 ph2 f4\" >\n  <div class=\"h3\" style=\"left:-120px;pointer-events:none\">\n  ", "\n\n  </div>\n\n\n <p>\n   Each donation to <a target=\"_blank\" href=\"https://opencollective.com/hydra-synth\">hydra community fund</a> generates a ", " that has never before existed in all of history.\n   The donations support <a target=\"_blank\" href=\"https://hydra.ojack.xyz\">hydra video synthesizer</a> and <a target=\"_blank\" href=\"https://hydra.ojack.xyz/grants/\">hydra community microgrants.</a> \n   </p>\n  <div class=\"f5\">\n  <h4>  HOW TO PARTICIPATE </h4>\n  <p> When you make a contribution of $5 or more to hydra (below), the transaction ID will be used to generate a UNIQUE MAGICAL BROWSER OBJECT\u2122 in your name.  Your UMBO\u2122 will appear at the top of the main gallery at <a href=\"https://uniquemagicalbrowserobjects.com\">https://uniquemagicalbrowserobjects.com</a>, along with a personalized link to the artwork and the source code that generates the artwork.\n You can also participate anonymously by choosing \"Incognito\" when donating.\n  <p>There is no limit to the number of UMBO\u2122 that you can create!\n  Each new object adds MORE ART and MORE MAGIC to the world.</p>\n  <p> No GIFs, No JPEGS, No  *.OBJ, No .mp4s, No ETH! only real live, browser-rendered art objects! ", " and support diy art software, open source communities, and ", ". </p>\n\n  </p>\n\n\n</div>\n\n<!-- <p>ACT NOW AND BE A PART OF WEB 8.0 !!!! Limited time only.</p> -->\n<div class=\"h4\" style=\"pointer-events:none\">", "", "</div>\n  <iframe src=\"https://opencollective.com/embed/hydra-synth/donate?useTheme=false\" style=\"width: 100%; height:600px;\" ></iframe >\n<div class=\"f5 pb6\">\n <h4>About Hydra</h4>\n\n<p style=", "><a target=\"_blank\" href=\"https://hydra.ojack.xyz\">Hydra</a> is a browser-based video synthesizer and live coding platform started by olivia jack in 2018. Its API is inspired by analog video synthesis, in which multiple visual sources (oscillators, cameras, application windows, other connected windows) can be transformed, modulated, and composited via combining sequences of functions. All volunteer-run and <a href=\"https://github.com/ojack/hydra\">open-source</a>, the project has a vibrant and growing community of users and contributers around the world.  The donations on this page go towards developing and maintaining hydra, supporting <a target=\"_blank\" href=\"https://hydra.ojack.xyz/grants/\">hydra community microgrants,</a> as well as hosting community events and coding + video art workshops.</p>\n\n<h4>TECHNICAL DETAILS</h4>\n\n<p style=", ">Each contribution on this site generates a record of that transaction in the Open Collective database. The id of that transaction is used as a \"seed\" for a computer-generated sketch created using hydra.\nAn infinite number of sketches can be created in this way. There is no blockchain involved, and the only transactions are the donations to hydra that are recorded on Open Collective. All processing and rendering happens on your own device, based on the generated seed (there is no server). </p>\n\n<p>UNIQUE MAGICAL BROWSER OBJECTS\u2122 was created by <a target=\"_blank\" href=\"https://ojack.xyz\">olivia jack</a>, in collaboration with Ale Colmenotti, Canek Zapata, Flor de Fuego, Mark DeNardo, and the hydra community.</p>\n<p>\nTech involved: <a target=\"_blank\" href=\"https://github.com/ojack/hydra-synth\">hydra synth</a>, <a target=\"_blank\" href=\"https://github.com/alecominotti/hydracodegenerator\">hydra code generator</a>, <a target=\"_blank\" href=\"https://www.choo.io/\">choo.io</a>, <a target=\"_blank\" href=\"https://docs.opencollective.com/help/contributing/development/api\">Open Collective GraphQL API</a>.\n</p>\n\nInspiration from fungible tokens, Walter Mercado, and Ron Popeil. For questions, please email <a target=\"_blank\" href=\"mailto:hydra.video.synth@gmail.com\">hydra.video.synth@gmail.com</a>\n</p>\n<p>\n(c) 2021 All UNIQUE MAGICAL BROWSER OBJECTS are licensed under a <a target=\"_blank\" href=\"http://creativecommons.org/licenses/by-nc-sa/3.0/\">Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License.</a>\n</p>\n  </div>\n</div>\n  "])), state.cache(AnimatedSlogan, 2000).render(), span('UNIQUE MAGICAL BROWSER OBJECT™'), span('ACT NOW'), span("DIGITAL ABUNDANCE"), state.cache(AnimatedSlogan, 3).render(), state.cache(AnimatedSlogan, 4).render(), baseStyle(), baseStyle());
 }; // (Special thanks to Nai, Rosa, Casey, Kirk, and Warren for helping me process my thoughts about art, NFTs, and community funding.)</p>
 // <p>
 // The real, 100% certified magical artworks in this gallery are generated live in your browser, before your very eyes.  </p>
@@ -62288,7 +62397,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "55506" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "61454" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
